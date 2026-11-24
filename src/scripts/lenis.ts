@@ -2,17 +2,17 @@
 // Provides buttery smooth scrolling and integrates with GSAP
 
 import Lenis from 'lenis';
-import type { Lenis as LenisType } from 'lenis';
+import type { LenisOptions, ScrollToOptions } from 'lenis';
 import { gsap, ScrollTrigger } from './gsap-register';
 
-let lenisInstance: LenisType | null = null;
+let lenisInstance: Lenis | null = null;
 
 /**
  * Initialize Lenis smooth scroll
  * @param options Lenis options
  * @returns Lenis instance
  */
-export function initLenis(options?: Partial<LenisType.Options>): LenisType {
+export function initLenis(options?: Partial<LenisOptions>): Lenis {
   if (lenisInstance) {
     return lenisInstance;
   }
@@ -20,16 +20,17 @@ export function initLenis(options?: Partial<LenisType.Options>): LenisType {
   // Check for reduced motion preference
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  lenisInstance = new LenisType({
+  lenisInstance = new Lenis({
     duration: prefersReducedMotion ? 0 : 1.2,
     easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    direction: 'vertical',
-    gestureDirection: 'vertical',
-    smooth: !prefersReducedMotion,
-    mouseMultiplier: 1,
-    smoothTouch: false,
+    orientation: 'vertical',
+    gestureOrientation: 'vertical',
+    smoothWheel: !prefersReducedMotion,
+    wheelMultiplier: 1,
     touchMultiplier: 2,
     infinite: false,
+    autoRaf: false,
+    respectReducedMotion: true,
     ...options,
   });
 
@@ -59,14 +60,14 @@ export function initLenis(options?: Partial<LenisType.Options>): LenisType {
 /**
  * Get the current Lenis instance
  */
-export function getLenis(): LenisType | null {
+export function getLenis(): Lenis | null {
   return lenisInstance;
 }
 
 /**
  * Scroll to a target element or position
  */
-export function scrollTo(target: string | Element | number, options?: LenisType.ScrollToOptions): void {
+export function scrollTo(target: string | Element | number, options?: ScrollToOptions): void {
   lenisInstance?.scrollTo(target, options);
 }
 
@@ -81,4 +82,4 @@ export function stopLenis(): void {
   }
 }
 
-export { LenisType as Lenis };
+export { Lenis };
