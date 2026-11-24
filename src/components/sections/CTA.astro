@@ -1,0 +1,518 @@
+---
+// CTA section - Contact form with gradient orb and particle burst
+// client:visible for GSAP ScrollTrigger and form validation
+import FormField from '../../components/ui/FormField.astro';
+import Button from '../../components/ui/Button.astro';
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+---
+
+<section class={`cta ${className}`} id="contact" aria-labelledby="cta-title">
+  <div class="cta-background" aria-hidden="true">
+    <canvas class="orb-canvas" data-orb-canvas></canvas>
+    <canvas class="burst-canvas" data-burst-canvas></canvas>
+  </div>
+  
+  <div class="container">
+    <div class="cta-content">
+      <header class="section-header">
+        <h2 id="cta-title" class="section-title" data-split-text>Let's Build Something</h2>
+        <p class="section-subtitle">Have a project in mind? I'd love to hear about it.</p>
+      </header>
+      
+      <form class="contact-form" id="contact-form" novalidate>
+        <div class="form-grid">
+          <FormField
+            label="Name"
+            name="name"
+            type="text"
+            required
+            placeholder="Your name"
+            class="form-field"
+          />
+          <FormField
+            label="Email"
+            name="email"
+            type="email"
+            required
+            placeholder="your@email.com"
+            class="form-field"
+          />
+        </div>
+        <FormField
+          label="Project Type"
+          name="projectType"
+          type="select"
+          required
+          placeholder="Select project type"
+          class="form-field"
+          options={[
+            { value: 'web', label: 'Web Development' },
+            { value: 'ai', label: 'AI Solutions' },
+            { value: 'automation', label: 'Automation' },
+            { value: 'business', label: 'Business Solutions' },
+            { value: 'other', label: 'Other' },
+          ]}
+        />
+        <FormField
+          label="Message"
+          name="message"
+          type="textarea"
+          required
+          placeholder="Tell me about your project..."
+          class="form-field"
+        />
+        
+        <div class="form-submit">
+          <Button type="submit" variant="primary" class="submit-btn">
+            <span class="btn-text">Send Message</span>
+            <span class="btn-loading" aria-hidden="true">
+              <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+                <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
+              </svg>
+            </span>
+          </Button>
+          <p class="form-note">I typically respond within 24 hours.</p>
+        </div>
+        
+        <div class="form-status" id="form-status" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap, ScrollTrigger } from '../../scripts/gsap-register';
+  import { prefersReducedMotion } from '../../utils/scroll';
+  import { SplitText } from 'gsap/SplitText';
+
+  gsap.registerPlugin(SplitText);
+
+  (() => {
+    const section = document.currentScript?.parentElement?.closest('.cta') as HTMLElement;
+    if (!section) return;
+
+    const prefersReduced = prefersReducedMotion();
+
+  // SplitText for section title
+  const titleElement = section.querySelector('[data-split-text]') as HTMLElement;
+  if (titleElement && !prefersReduced) {
+    const split = new SplitText(titleElement, { type: 'words,chars' });
+    gsap.from(split.chars, {
+      opacity: 0,
+      y: 30,
+      duration: 0.8,
+      stagger: 0.03,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: titleElement,
+        start: 'top 80%',
+      },
+    });
+  }
+
+  // Form validation and submission
+  const form = section.querySelector('#contact-form') as HTMLFormElement;
+  const statusEl = section.querySelector('#form-status') as HTMLElement;
+  const submitBtn = section.querySelector('.submit-btn') as HTMLButtonElement;
+  const btnText = section.querySelector('.btn-text') as HTMLElement;
+  const btnLoading = section.querySelector('.btn-loading') as HTMLElement;
+
+  if (form) {
+    // Real-time validation
+    const fields = form.querySelectorAll('input, textarea, select');
+    fields.forEach(field => {
+      field.addEventListener('blur', () => validateField(field as HTMLInputElement));
+      field.addEventListener('input', () => clearError(field as HTMLInputElement));
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      let isValid = true;
+      fields.forEach(field => {
+        if (!validateField(field as HTMLInputElement)) {
+          isValid = false;
+        }
+      });
+
+      if (!isValid) return;
+
+      // Show loading state
+      submitBtn.disabled = true;
+      btnText.style.display = 'none';
+      btnLoading.style.display = 'inline-flex';
+
+      try {
+        // Simulate form submission (replace with actual endpoint)
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        showStatus('success', 'Message sent successfully! I\'ll get back to you soon.');
+        form.reset();
+        triggerParticleBurst();
+      } catch {
+        showStatus('error', 'Something went wrong. Please try again or email directly.');
+      } finally {
+        submitBtn.disabled = false;
+        btnText.style.display = 'inline';
+        btnLoading.style.display = 'none';
+      }
+    });
+  }
+
+  function validateField(field: HTMLInputElement): boolean {
+    const errorEl = field.parentElement?.querySelector('[role="alert"]') as HTMLElement;
+    let isValid = true;
+    let message = '';
+
+    if (field.required && !field.value.trim()) {
+      isValid = false;
+      message = `${field.labels?.[0]?.textContent?.replace('*', '').trim() || 'This field'} is required`;
+    } else if (field.type === 'email' && field.value && !isValidEmail(field.value)) {
+      isValid = false;
+      message = 'Please enter a valid email address';
+    }
+
+    if (!isValid && errorEl) {
+      errorEl.textContent = message;
+      field.setAttribute('aria-invalid', 'true');
+      field.style.borderColor = 'var(--gold)';
+    }
+
+    return isValid;
+  }
+
+  function clearError(field: HTMLInputElement) {
+    const errorEl = field.parentElement?.querySelector('[role="alert"]') as HTMLElement;
+    if (errorEl) {
+      errorEl.textContent = '';
+    }
+    field.removeAttribute('aria-invalid');
+    field.style.borderColor = '';
+  }
+
+  function isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function showStatus(type: 'success' | 'error', message: string) {
+    if (!statusEl) return;
+    statusEl.textContent = message;
+    statusEl.className = `form-status ${type}`;
+    
+    if (!prefersReduced) {
+      gsap.from(statusEl, { opacity: 0, y: 10, duration: 0.3, ease: 'power2.out' });
+    }
+  }
+
+  // Gradient orb following mouse
+  const orbCanvas = section.querySelector('[data-orb-canvas]') as HTMLCanvasElement;
+  if (orbCanvas && !prefersReduced) {
+    initOrbCanvas(orbCanvas);
+  }
+
+  function initOrbCanvas(canvas: HTMLCanvasElement) {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let width = 0;
+    let height = 0;
+    let mouseX = 0.5;
+    let mouseY = 0.5;
+    let orbX = 0.5;
+    let orbY = 0.5;
+    let animationId: number;
+
+    function resize() {
+      const rect = canvas.parentElement?.getBoundingClientRect();
+      if (!rect) return;
+      width = rect.width;
+      height = rect.height;
+      canvas.width = width * window.devicePixelRatio;
+      canvas.height = height * window.devicePixelRatio;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+    }
+
+    function draw() {
+      if (!ctx) return;
+      
+      ctx.clearRect(0, 0, width, height);
+      
+      // Smooth follow
+      orbX += (mouseX - orbX) * 0.05;
+      orbY += (mouseY - orbY) * 0.05;
+      
+      const x = orbX * width;
+      const y = orbY * height;
+      const radius = Math.max(width, height) * 0.6;
+      
+      // Multi-layer gradient orb
+      const gradient1 = ctx.createRadialGradient(x, y, 0, x, y, radius);
+      gradient1.addColorStop(0, 'rgba(232, 180, 74, 0.08)');
+      gradient1.addColorStop(0.5, 'rgba(232, 180, 74, 0.02)');
+      gradient1.addColorStop(1, 'rgba(232, 180, 74, 0)');
+      
+      const gradient2 = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.5);
+      gradient2.addColorStop(0, 'rgba(253, 224, 71, 0.1)');
+      gradient2.addColorStop(1, 'rgba(253, 224, 71, 0)');
+      
+      ctx.fillStyle = gradient1;
+      ctx.fillRect(0, 0, width, height);
+      
+      ctx.fillStyle = gradient2;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    function animate() {
+      draw();
+      animationId = requestAnimationFrame(animate);
+    }
+
+    function onMouseMove(e: MouseEvent) {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = (e.clientX - rect.left) / rect.width;
+      mouseY = (e.clientY - rect.top) / rect.height;
+    }
+
+    canvas.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('resize', resize);
+    resize();
+    animate();
+
+    // Cleanup
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.removedNodes) {
+          if (node === section || node.contains(section)) {
+            cancelAnimationFrame(animationId);
+            canvas.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('resize', resize);
+            observer.disconnect();
+            return;
+          }
+        }
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  // Particle burst on successful submit
+  const burstCanvas = section.querySelector('[data-burst-canvas]') as HTMLCanvasElement;
+  let burstAnimationId: number;
+
+  function triggerParticleBurst() {
+    if (!burstCanvas || prefersReduced) return;
+    
+    const ctx = burstCanvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = burstCanvas.getBoundingClientRect();
+    burstCanvas.width = rect.width * window.devicePixelRatio;
+    burstCanvas.height = rect.height * window.devicePixelRatio;
+    burstCanvas.style.width = rect.width + 'px';
+    burstCanvas.style.height = rect.height + 'px';
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+    const particles: {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      size: number;
+      color: string;
+      alpha: number;
+      life: number;
+    }[] = [];
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const particleCount = 60;
+
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.5;
+      const speed = 2 + Math.random() * 4;
+      particles.push({
+        x: centerX,
+        y: centerY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size: 3 + Math.random() * 4,
+        color: Math.random() < 0.5 ? '#e8b44a' : '#fde047',
+        alpha: 1,
+        life: 1,
+      });
+    }
+
+    let startTime = performance.now();
+
+    function animateBurst() {
+      const elapsed = (performance.now() - startTime) / 1000;
+      
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      
+      let alive = 0;
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.3; // gravity
+        p.vx *= 0.99;
+        p.vy *= 0.99;
+        p.life -= 0.02;
+        p.alpha = p.life;
+        p.size *= 0.98;
+        
+        if (p.life > 0) {
+          alive++;
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, Math.max(1, p.size), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+      
+      ctx.globalAlpha = 1;
+      
+      if (alive > 0 && elapsed < 3) {
+        burstAnimationId = requestAnimationFrame(animateBurst);
+      }
+    }
+
+    animateBurst();
+  }
+})();
+</script>
+
+<style>
+  .cta {
+    position: relative;
+    padding: 120px 0;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  .cta-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .orb-canvas,
+  .burst-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .cta-content {
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .form-field {
+    /* Styles handled by FormField component */
+  }
+
+  .form-submit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .submit-btn {
+    position: relative;
+    min-width: 200px;
+  }
+
+  .btn-loading {
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .spinner {
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .form-note {
+    font-size: 0.875rem;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .form-status {
+    text-align: center;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+  }
+
+  .form-status.success {
+    background: rgba(40, 202, 66, 0.15);
+    border: 1px solid #28ca42;
+    color: #28ca42;
+  }
+
+  .form-status.error {
+    background: rgba(255, 95, 87, 0.15);
+    border: 1px solid #ff5f57;
+    color: #ff5f57;
+  }
+
+  @media (max-width: 768px) {
+    .cta {
+      padding: 80px 0;
+    }
+    
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orb-canvas,
+    .burst-canvas {
+      display: none;
+    }
+    
+    .spinner {
+      animation: none;
+    }
+  }
+</style>

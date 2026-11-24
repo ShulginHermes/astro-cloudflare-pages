@@ -1,0 +1,357 @@
+---
+// HowIWork section - Terminal animation with grid distortion background
+// client:visible for GSAP ScrollTrigger
+import Terminal from '../../components/ui/Terminal.astro';
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+
+const processSteps = [
+  { command: 'init --discovery', output: 'Analyzing requirements & constraints...', delay: 600 },
+  { command: 'design --architecture', output: 'Designing system architecture...', delay: 600 },
+  { command: 'develop --iterative', output: 'Building with TDD & clean code...', delay: 600 },
+  { command: 'test --coverage=95%', output: 'Running test suite... ✓ All passing', delay: 600 },
+  { command: 'deploy --target=edge', output: 'Deploying to global edge network...', delay: 600 },
+  { command: 'monitor --real-time', output: 'Observability active. Performance optimized.', delay: 800 },
+];
+---
+
+<section class={`how-i-work ${className}`} id="how-i-work" aria-labelledby="how-i-work-title">
+  <div class="how-i-work-background" aria-hidden="true">
+    <canvas class="grid-canvas" data-grid-canvas></canvas>
+  </div>
+  
+  <div class="container">
+    <div class="how-i-work-grid">
+      <div class="how-i-work-content">
+        <header class="section-header">
+          <h2 id="how-i-work-title" class="section-title" data-split-text>How I Work</h2>
+          <p class="section-subtitle">A refined process honed over 12+ years of shipping production systems.</p>
+        </header>
+        
+        <div class="process-principles">
+          <article class="principle" data-principle>
+            <div class="principle-number">01</div>
+            <h3 class="principle-title">Discovery First</h3>
+            <p class="principle-description">Deep understanding before any code. We map your business goals to technical strategy.</p>
+          </article>
+          <article class="principle" data-principle>
+            <div class="principle-number">02</div>
+            <h3 class="principle-title">Architecture Driven</h3>
+            <p class="principle-description">Scalable, maintainable systems designed for change. No technical debt by default.</p>
+          </article>
+          <article class="principle" data-principle>
+            <div class="principle-number">03</div>
+            <h3 class="principle-title">Iterative Delivery</h3>
+            <p class="principle-description">Working software every sprint. Continuous feedback loops. Measurable progress.</p>
+          </article>
+          <article class="principle" data-principle>
+            <div class="principle-number">04</div>
+            <h3 class="principle-title">Operational Excellence</h3>
+            <p class="principle-description">Monitoring, alerting, and optimization built-in. Systems that run themselves.</p>
+          </article>
+        </div>
+      </div>
+      
+      <div class="how-i-work-terminal">
+        <Terminal commands={processSteps} />
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap, ScrollTrigger } from '../../scripts/gsap-register';
+  import { prefersReducedMotion } from '../../utils/scroll';
+  import { SplitText } from 'gsap/SplitText';
+
+  gsap.registerPlugin(SplitText);
+
+  (() => {
+    const section = document.currentScript?.parentElement?.closest('.how-i-work') as HTMLElement;
+    if (!section) return;
+
+    const prefersReduced = prefersReducedMotion();
+
+  // SplitText for section title
+  const titleElement = section.querySelector('[data-split-text]') as HTMLElement;
+  if (titleElement && !prefersReduced) {
+    const split = new SplitText(titleElement, { type: 'words,chars' });
+    gsap.from(split.chars, {
+      opacity: 0,
+      y: 30,
+      duration: 0.8,
+      stagger: 0.03,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: titleElement,
+        start: 'top 80%',
+      },
+    });
+  }
+
+  // Animate principles on scroll
+  const principles = section.querySelectorAll('[data-principle]');
+  principles.forEach((principle, i) => {
+    if (!prefersReduced) {
+      gsap.from(principle, {
+        opacity: 0,
+        x: -40,
+        duration: 0.6,
+        delay: i * 0.1,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: principle,
+          start: 'top 85%',
+        },
+      });
+    } else {
+      (principle as HTMLElement).style.opacity = '1';
+      (principle as HTMLElement).style.transform = 'none';
+    }
+  });
+
+  // Grid distortion canvas animation
+  const canvas = section.querySelector('[data-grid-canvas]') as HTMLCanvasElement;
+  if (canvas && !prefersReduced) {
+    initGridCanvas(canvas);
+  }
+
+  function initGridCanvas(canvas: HTMLCanvasElement) {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let width = 0;
+    let height = 0;
+    let animationId: number;
+    let time = 0;
+    let scrollProgress = 0;
+
+    function resize() {
+      const rect = canvas.parentElement?.getBoundingClientRect();
+      if (!rect) return;
+      width = rect.width;
+      height = rect.height;
+      canvas.width = width * window.devicePixelRatio;
+      canvas.height = height * window.devicePixelRatio;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
+    function draw() {
+      if (!ctx) return;
+      
+      ctx.clearRect(0, 0, width, height);
+      
+      const gridSize = 40;
+      const cols = Math.ceil(width / gridSize) + 1;
+      const rows = Math.ceil(height / gridSize) + 1;
+      
+      ctx.strokeStyle = 'rgba(232, 180, 74, 0.04)';
+      ctx.lineWidth = 0.5;
+      
+      // Vertical lines with distortion
+      for (let i = 0; i <= cols; i++) {
+        ctx.beginPath();
+        for (let y = 0; y <= height; y += 5) {
+          const x = i * gridSize;
+          const distortion = Math.sin((y + time * 30) * 0.01) * Math.cos((x + time * 20) * 0.01) * 15 * scrollProgress;
+          const finalX = x + distortion;
+          
+          if (y === 0) ctx.moveTo(finalX, y);
+          else ctx.lineTo(finalX, y);
+        }
+        ctx.stroke();
+      }
+      
+      // Horizontal lines with distortion
+      for (let j = 0; j <= rows; j++) {
+        ctx.beginPath();
+        for (let x = 0; x <= width; x += 5) {
+          const y = j * gridSize;
+          const distortion = Math.cos((x + time * 25) * 0.01) * Math.sin((y + time * 15) * 0.01) * 15 * scrollProgress;
+          const finalY = y + distortion;
+          
+          if (x === 0) ctx.moveTo(x, finalY);
+          else ctx.lineTo(x, finalY);
+        }
+        ctx.stroke();
+      }
+      
+      // Gold accent lines at intervals
+      ctx.strokeStyle = 'rgba(232, 180, 74, 0.08)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= cols; i += 4) {
+        ctx.beginPath();
+        ctx.moveTo(i * gridSize, 0);
+        ctx.lineTo(i * gridSize, height);
+        ctx.stroke();
+      }
+      for (let j = 0; j <= rows; j += 4) {
+        ctx.beginPath();
+        ctx.moveTo(0, j * gridSize);
+        ctx.lineTo(width, j * gridSize);
+        ctx.stroke();
+      }
+    }
+
+    function animate() {
+      time += 0.016;
+      draw();
+      animationId = requestAnimationFrame(animate);
+    }
+
+    // Track scroll progress for distortion intensity
+    ScrollTrigger.create({
+      trigger: section,
+      start: 'top bottom',
+      end: 'bottom top',
+      scrub: 1,
+      onUpdate: (self) => {
+        scrollProgress = self.progress;
+      },
+    });
+
+    resize();
+    animate();
+    window.addEventListener('resize', resize);
+
+    // Cleanup
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.removedNodes) {
+          if (node === section || node.contains(section)) {
+            cancelAnimationFrame(animationId);
+            window.removeEventListener('resize', resize);
+            observer.disconnect();
+            return;
+          }
+        }
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+})();
+</script>
+
+<style>
+  .how-i-work {
+    position: relative;
+    padding: 120px 0;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  .how-i-work-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .grid-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .how-i-work-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: start;
+  }
+
+  .how-i-work-content {
+    padding-top: 20px;
+  }
+
+  .section-header {
+    margin-bottom: 48px;
+  }
+
+  .process-principles {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .principle {
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .principle:hover {
+    border-color: var(--gold);
+    box-shadow: 0 0 30px rgba(232, 180, 74, 0.1);
+    transform: translateY(-4px);
+  }
+
+  .principle-number {
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+
+  .principle-title {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .principle-description {
+    font-size: 0.875rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .how-i-work-terminal {
+    position: sticky;
+    top: 120px;
+    height: fit-content;
+  }
+
+  @media (max-width: 1024px) {
+    .how-i-work-grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    
+    .how-i-work-terminal {
+      position: static;
+    }
+    
+    .process-principles {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .how-i-work {
+      padding: 80px 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .grid-canvas {
+      display: none;
+    }
+    
+    .principle:hover {
+      transform: none;
+    }
+  }
+</style>

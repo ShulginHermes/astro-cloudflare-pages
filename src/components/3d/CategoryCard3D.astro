@@ -1,0 +1,535 @@
+---
+// CategoryCard3D component - 3D card with live micro-demo for What I Build section
+// client:load for Three.js
+interface Props {
+  title: string;
+  description: string;
+  icon: string; // SVG path or icon name
+  demoType: 'particles' | 'network' | 'grid' | 'wave';
+  accentColor?: string;
+  class?: string;
+}
+
+const { title, description, icon, demoType, accentColor = '#e8b44a', class: className = '' } = Astro.props;
+---
+
+<div class={`category-card-3d ${className}`} data-category-card data-demo-type={demoType}>
+  <div class="card-inner">
+    <div class="card-front">
+      <div class="card-icon" style="color: {accentColor};" aria-hidden="true">
+        {icon}
+      </div>
+      <h3 class="card-title">{title}</h3>
+      <p class="card-description">{description}</p>
+    </div>
+    <div class="card-back">
+      <div class="demo-canvas" data-demo-canvas></div>
+      <div class="demo-label">Live Demo</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import * as THREE from 'three';
+  import { prefersReducedMotion } from '../../utils/scroll';
+
+  (() => {
+    const card = document.currentScript?.parentElement?.closest('[data-category-card]') as HTMLElement;
+    if (!card) return;
+
+    const demoType = card.dataset.demoType;
+    const canvasContainer = card.querySelector('[data-demo-canvas]') as HTMLElement;
+    const prefersReduced = prefersReducedMotion();
+
+    if (!canvasContainer) return;
+
+    // Create mini Three.js scene for each demo type
+    function createDemoScene(type: string) {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+      camera.position.z = 5;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(200, 200);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      canvasContainer.appendChild(renderer.domElement);
+
+      let animationId: number;
+      let time = 0;
+
+      const goldColor = new THREE.Color(0xe8b44a);
+      const brightGoldColor = new THREE.Color(0xfde047);
+
+      switch (type) {
+        case 'particles': {
+          // Particle burst demo
+          const geometry = new THREE.BufferGeometry();
+          const count = 500;
+          const positions = new Float32Array(count * 3);
+          const velocities = new Float32Array(count * 3);
+          const sizes = new Float32Array(count);
+          const colors = new Float32Array(count * 3);
+          const alphas = new Float32Array(count);
+
+          for (let i = 0; i < count; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            const r = 0.5 + Math.random() * 1.5;
+            
+            positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+            positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+            positions[i * 3 + 2] = r * Math.cos(phi);
+
+            velocities[i * 3] = (Math.random() - 0.5) * 0.02;
+            velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.02;
+            velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.02;
+
+            sizes[i] = Math.random() * 3 + 1;
+
+            const colorRand = Math.random();
+            if (colorRand < 0.3) {
+              colors[i * 3] = goldColor.r;
+              colors[i * 3 + 1] = goldColor.g;
+              colors[i * 3 + 2] = goldColor.b;
+            } else if (colorRand < 0.6) {
+              colors[i * 3] = brightGoldColor.r;
+              colors[i * 3 + 1] = brightGoldColor.g;
+              colors[i * 3 + 2] = brightGoldColor.b;
+            } else {
+              colors[i * 3] = 1;
+              colors[i * 3 + 1] = 1;
+              colors[i * 3 + 2] = 1;
+            }
+            alphas[i] = 0.3 + Math.random() * 0.7;
+          }
+
+          geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
+          geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+          geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+          geometry.setAttribute('alpha', new THREE.BufferAttribute(alphas, 1));
+
+          const material = new THREE.PointsMaterial({
+            size: 0.05,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+          });
+
+          const points = new THREE.Points(geometry, material);
+          scene.add(points);
+
+          function animate() {
+            if (prefersReduced) return;
+            
+            time += 0.016;
+            const posAttr = geometry.getAttribute('position');
+            const velAttr = geometry.getAttribute('velocity');
+            
+            for (let i = 0; i < count; i++) {
+              posAttr.array[i * 3] += velAttr.array[i * 3];
+              posAttr.array[i * 3 + 1] += velAttr.array[i * 3 + 1];
+              posAttr.array[i * 3 + 2] += velAttr.array[i * 3 + 2];
+              
+              // Reset particles that go too far
+              const dist = Math.sqrt(
+                posAttr.array[i * 3] ** 2 + 
+                posAttr.array[i * 3 + 1] ** 2 + 
+                posAttr.array[i * 3 + 2] ** 2
+              );
+              if (dist > 4) {
+                posAttr.array[i * 3] = (Math.random() - 0.5) * 0.5;
+                posAttr.array[i * 3 + 1] = (Math.random() - 0.5) * 0.5;
+                posAttr.array[i * 3 + 2] = (Math.random() - 0.5) * 0.5;
+              }
+            }
+            posAttr.needsUpdate = true;
+
+            points.rotation.y += 0.002;
+            points.rotation.x += 0.001;
+
+            renderer.render(scene, camera);
+            animationId = requestAnimationFrame(animate);
+          }
+          animate();
+          break;
+        }
+
+        case 'network': {
+          // Neural network demo
+          const nodeCount = 30;
+          const nodes: THREE.Mesh[] = [];
+          const connections: { from: number; to: number }[] = [];
+
+          // Create nodes
+          const nodeGeometry = new THREE.SphereGeometry(0.08, 12, 12);
+          const nodeMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0xe8b44a, 
+            transparent: true, 
+            opacity: 0.8 
+          });
+
+          for (let i = 0; i < nodeCount; i++) {
+            const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
+            node.position.set(
+              (Math.random() - 0.5) * 6,
+              (Math.random() - 0.5) * 4,
+              (Math.random() - 0.5) * 3
+            );
+            scene.add(node);
+            nodes.push(node);
+          }
+
+          // Create connections
+          for (let i = 0; i < nodeCount; i++) {
+            for (let j = i + 1; j < nodeCount; j++) {
+              if (Math.random() < 0.15) {
+                connections.push({ from: i, to: j });
+              }
+            }
+          }
+
+          const lineMaterial = new THREE.LineBasicMaterial({ 
+            color: 0xe8b44a, 
+            transparent: true, 
+            opacity: 0.3 
+          });
+
+          const lineGeometries: THREE.BufferGeometry[] = [];
+          connections.forEach(() => {
+            const geom = new THREE.BufferGeometry();
+            geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+            const line = new THREE.Line(geom, lineMaterial);
+            scene.add(line);
+            lineGeometries.push(geom);
+          });
+
+          function animate() {
+            if (prefersReduced) return;
+            
+            time += 0.016;
+            
+            // Animate nodes
+            nodes.forEach((node, i) => {
+              node.position.y += Math.sin(time * 2 + i) * 0.005;
+              node.position.x += Math.cos(time * 1.5 + i) * 0.003;
+              node.scale.setScalar(0.8 + Math.sin(time * 3 + i) * 0.2);
+            });
+
+            // Update connections
+            connections.forEach((conn, idx) => {
+              const from = nodes[conn.from].position;
+              const to = nodes[conn.to].position;
+              const positions = lineGeometries[idx].getAttribute('position');
+              positions.array[0] = from.x; positions.array[1] = from.y; positions.array[2] = from.z;
+              positions.array[3] = to.x; positions.array[4] = to.y; positions.array[5] = to.z;
+              positions.needsUpdate = true;
+              
+              // Pulse opacity
+              const dist = from.distanceTo(to);
+              lineMaterial.opacity = Math.max(0.1, 0.5 - dist * 0.05);
+            });
+
+            renderer.render(scene, camera);
+            animationId = requestAnimationFrame(animate);
+          }
+          animate();
+          break;
+        }
+
+        case 'grid': {
+          // Distorting grid demo
+          const gridSize = 20;
+          const gridGeometry = new THREE.BufferGeometry();
+          const positions: number[] = [];
+          const indices: number[] = [];
+
+          for (let x = -gridSize; x <= gridSize; x++) {
+            for (let z = -gridSize; z <= gridSize; z++) {
+              positions.push(x * 0.3, 0, z * 0.3);
+            }
+          }
+
+          const lineMaterial = new THREE.LineBasicMaterial({ 
+            color: 0xe8b44a, 
+            transparent: true, 
+            opacity: 0.4 
+          });
+
+          // Create grid lines
+          const lines: THREE.Line[] = [];
+          for (let i = 0; i <= gridSize * 2; i++) {
+            // X lines
+            const geomX = new THREE.BufferGeometry();
+            const posX = new Float32Array((gridSize * 2 + 1) * 3);
+            for (let j = 0; j <= gridSize * 2; j++) {
+              posX[j * 3] = (j - gridSize) * 0.3;
+              posX[j * 3 + 1] = 0;
+              posX[j * 3 + 2] = (i - gridSize) * 0.3;
+            }
+            geomX.setAttribute('position', new THREE.BufferAttribute(posX, 3));
+            const lineX = new THREE.Line(geomX, lineMaterial);
+            scene.add(lineX);
+            lines.push(lineX);
+
+            // Z lines
+            const geomZ = new THREE.BufferGeometry();
+            const posZ = new Float32Array((gridSize * 2 + 1) * 3);
+            for (let j = 0; j <= gridSize * 2; j++) {
+              posZ[j * 3] = (i - gridSize) * 0.3;
+              posZ[j * 3 + 1] = 0;
+              posZ[j * 3 + 2] = (j - gridSize) * 0.3;
+            }
+            geomZ.setAttribute('position', new THREE.BufferAttribute(posZ, 3));
+            const lineZ = new THREE.Line(geomZ, lineMaterial);
+            scene.add(lineZ);
+            lines.push(lineZ);
+          }
+
+          function animate() {
+            if (prefersReduced) return;
+            
+            time += 0.016;
+            
+            lines.forEach((line, idx) => {
+              const posAttr = line.geometry.getAttribute('position');
+              const count = posAttr.count;
+              
+              for (let i = 0; i < count; i++) {
+                const x = posAttr.array[i * 3];
+                const z = posAttr.array[i * 3 + 2];
+                const dist = Math.sqrt(x * x + z * z);
+                const wave = Math.sin(dist * 3 - time * 2) * 0.15 * Math.exp(-dist * 0.1);
+                posAttr.array[i * 3 + 1] = wave;
+              }
+              posAttr.needsUpdate = true;
+            });
+
+            renderer.render(scene, camera);
+            animationId = requestAnimationFrame(animate);
+          }
+          animate();
+          break;
+        }
+
+        case 'wave': {
+          // Wave surface demo
+          const geometry = new THREE.PlaneGeometry(6, 4, 50, 50);
+          const material = new THREE.MeshBasicMaterial({
+            color: 0x18181b,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.6,
+          });
+          const plane = new THREE.Mesh(geometry, material);
+          plane.rotation.x = -Math.PI / 2;
+          scene.add(plane);
+
+          const positionAttr = geometry.getAttribute('position');
+          const originalY = new Float32Array(positionAttr.count);
+          for (let i = 0; i < positionAttr.count; i++) {
+            originalY[i] = positionAttr.array[i * 3 + 1];
+          }
+
+          function animate() {
+            if (prefersReduced) return;
+            
+            time += 0.016;
+            
+            for (let i = 0; i < positionAttr.count; i++) {
+              const x = positionAttr.array[i * 3];
+              const z = positionAttr.array[i * 3 + 2];
+              const dist = Math.sqrt(x * x + z * z);
+              positionAttr.array[i * 3 + 1] = originalY[i] + Math.sin(dist * 2 - time * 3) * 0.2 * Math.exp(-dist * 0.3);
+            }
+            positionAttr.needsUpdate = true;
+            geometry.computeVertexNormals();
+
+            plane.rotation.z += 0.0005;
+
+            renderer.render(scene, camera);
+            animationId = requestAnimationFrame(animate);
+          }
+          animate();
+          break;
+        }
+      }
+
+      // Handle resize
+      function onResize() {
+        const rect = canvasContainer.getBoundingClientRect();
+        renderer.setSize(rect.width, rect.height);
+        camera.aspect = rect.width / rect.height;
+        camera.updateProjectionMatrix();
+      }
+
+      window.addEventListener('resize', onResize);
+      onResize();
+
+      // Cleanup
+      return () => {
+        window.removeEventListener('resize', onResize);
+        cancelAnimationFrame(animationId);
+        renderer.dispose();
+        scene.traverse(obj => {
+          if (obj instanceof THREE.Mesh) {
+            obj.geometry.dispose();
+            if (obj.material instanceof THREE.Material) obj.material.dispose();
+          }
+          if (obj instanceof THREE.Line) {
+            obj.geometry.dispose();
+            if (obj.material instanceof THREE.Material) obj.material.dispose();
+          }
+          if (obj instanceof THREE.Points) {
+            obj.geometry.dispose();
+            if (obj.material instanceof THREE.Material) obj.material.dispose();
+          }
+        });
+      };
+    }
+
+    let cleanup: () => void;
+    
+    // Initialize when card is visible
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          cleanup = createDemoScene(demoType);
+          observer.unobserve(card);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    observer.observe(card);
+
+    // Cleanup on removal
+    const mutationObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.removedNodes) {
+          if (node === card || node.contains(card)) {
+            if (cleanup) cleanup();
+            observer.disconnect();
+            mutationObserver.disconnect();
+            return;
+          }
+        }
+      }
+    });
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+  })();
+</script>
+
+<style>
+  .category-card-3d {
+    perspective: 1000px;
+    cursor: pointer;
+  }
+
+  .card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+    border-radius: 16px;
+  }
+
+  .category-card-3d:hover .card-inner {
+    transform: rotateY(180deg);
+  }
+
+  .card-front,
+  .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .card-front {
+    z-index: 2;
+  }
+
+  .card-back {
+    transform: rotateY(180deg);
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(24, 24, 27, 0.9) 100%);
+    border-color: var(--gold);
+    box-shadow: 0 0 40px rgba(232, 180, 74, 0.15);
+  }
+
+  .card-icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .card-description {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 280px;
+  }
+
+  .demo-canvas {
+    width: 100%;
+    height: 180px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+  }
+
+  .demo-canvas canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .demo-label {
+    margin-top: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card-inner {
+      transition: none;
+    }
+    .category-card-3d:hover .card-inner {
+      transform: none;
+    }
+    .card-back {
+      display: none;
+    }
+  }
+</style>

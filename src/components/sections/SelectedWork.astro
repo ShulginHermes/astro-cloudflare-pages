@@ -1,0 +1,509 @@
+---
+// SelectedWork section - Case study cards with WebGL hover displacement
+// client:visible for GSAP ScrollTrigger
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+
+const caseStudies = [
+  {
+    slug: 'ventureflow',
+    title: 'VentureFlow',
+    category: 'Web Development',
+    description: 'SaaS platform for startup fundraising. Real-time cap table, investor portal, and automated compliance.',
+    image: '/images/ventureflow.jpg',
+    metrics: { users: '12K+', raised: '$45M+', uptime: '99.99%' },
+    tech: ['Astro', 'React', 'Node.js', 'PostgreSQL', 'Stripe'],
+  },
+  {
+    slug: 'neuralops',
+    title: 'NeuralOps',
+    category: 'AI Solutions',
+    description: 'MLOps platform for model lifecycle management. Automated training, deployment, and monitoring pipelines.',
+    image: '/images/neuralops.jpg',
+    metrics: { models: '500+', latency: '<50ms', accuracy: '94.2%' },
+    tech: ['Python', 'Kubernetes', 'MLflow', 'Redis', 'Prometheus'],
+  },
+  {
+    slug: 'autosync',
+    title: 'AutoSync',
+    category: 'Automation',
+    description: 'Enterprise workflow automation. 200+ integrations, visual builder, and self-healing pipelines.',
+    image: '/images/autosync.jpg',
+    metrics: { tasks: '2M+/day', integrations: '200+', errorRate: '<0.1%' },
+    tech: ['TypeScript', 'Temporal', 'PostgreSQL', 'Redis', 'GraphQL'],
+  },
+  {
+    slug: 'growthmatrix',
+    title: 'GrowthMatrix',
+    category: 'Business Solutions',
+    description: 'Growth strategy framework. Market analysis, experiment tracking, and ROI optimization dashboard.',
+    image: '/images/growthmatrix.jpg',
+    metrics: { growth: '3.2x', experiments: '500+', roi: '420%' },
+    tech: ['Next.js', 'Python', 'BigQuery', 'Looker', 'dbt'],
+  },
+];
+---
+
+<section class={`selected-work ${className}`} id="selected-work" aria-labelledby="selected-work-title">
+  <div class="container">
+    <header class="section-header">
+      <h2 id="selected-work-title" class="section-title" data-split-text>Selected Work</h2>
+      <p class="section-subtitle">Real projects. Measurable outcomes. Lasting impact.</p>
+    </header>
+    
+    <div class="case-studies-grid" data-case-studies-grid>
+      {caseStudies.map((study, i) => (
+        <article class="case-study-card" data-case-study data-index={i} data-slug={study.slug}>
+          <div class="card-media" data-card-media>
+            <div class="displacement-canvas" data-displacement-canvas></div>
+            <div class="card-overlay">
+              <div class="card-category">{study.category}</div>
+              <h3 class="card-title">{study.title}</h3>
+              <p class="card-description">{study.description}</p>
+              <div class="card-metrics">
+                {Object.entries(study.metrics).map(([key, value]) => (
+                  <div class="metric">
+                    <span class="metric-value">{value}</span>
+                    <span class="metric-label">{key}</span>
+                  </div>
+                ))}
+              </div>
+              <div class="card-tech">
+                {study.tech.map(t => <span class="tech-tag">{t}</span>)}
+              </div>
+              <a href={`/work/${study.slug}`} class="card-link" data-card-link>
+                View Case Study
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  import * as THREE from 'three';
+  import { gsap, ScrollTrigger } from '../../scripts/gsap-register';
+  import { prefersReducedMotion } from '../../utils/scroll';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  (() => {
+    const section = document.currentScript?.parentElement?.closest('.selected-work') as HTMLElement;
+    if (!section) return;
+
+    const prefersReduced = prefersReducedMotion();
+
+  // SplitText for section title
+  const titleElement = section.querySelector('[data-split-text]') as HTMLElement;
+  if (titleElement && !prefersReduced) {
+    const split = new SplitText(titleElement, { type: 'words,chars' });
+    gsap.from(split.chars, {
+      opacity: 0,
+      y: 30,
+      duration: 0.8,
+      stagger: 0.03,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: titleElement,
+        start: 'top 80%',
+      },
+    });
+  }
+
+  // Initialize WebGL displacement for each card
+  const cards = section.querySelectorAll('[data-case-study]');
+  cards.forEach(card => {
+    const canvas = card.querySelector('[data-displacement-canvas]') as HTMLCanvasElement;
+    const media = card.querySelector('[data-card-media]') as HTMLElement;
+    const overlay = card.querySelector('.card-overlay') as HTMLElement;
+    
+    if (!canvas || !media) return;
+    
+    if (!prefersReduced) {
+      initDisplacementEffect(canvas, media, overlay, card);
+    }
+    
+    // Card entrance animation
+    gsap.from(card, {
+      opacity: 0,
+      y: 40,
+      duration: 0.8,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: card,
+        start: 'top 85%',
+      },
+    });
+  });
+
+  function initDisplacementEffect(
+    canvas: HTMLCanvasElement,
+    media: HTMLElement,
+    overlay: HTMLElement,
+    card: Element
+  ) {
+    // Create Three.js scene for displacement
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true,
+    });
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Create plane geometry
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    
+    // Create noise texture for displacement
+    const noiseSize = 256;
+    const noiseData = new Uint8Array(noiseSize * noiseSize * 3);
+    for (let i = 0; i < noiseSize * noiseSize * 3; i++) {
+      noiseData[i] = Math.random() * 255;
+    }
+    const noiseTexture = new THREE.DataTexture(noiseData, noiseSize, noiseSize, THREE.RGBFormat);
+    noiseTexture.wrapS = THREE.RepeatWrapping;
+    noiseTexture.wrapT = THREE.RepeatWrapping;
+    noiseTexture.needsUpdate = true;
+
+    // Displacement shader material
+    const material = new THREE.ShaderMaterial({
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D uNoise;
+        uniform float uTime;
+        uniform float uProgress;
+        uniform vec2 uMouse;
+        varying vec2 vUv;
+        
+        void main() {
+          vec2 uv = vUv;
+          
+          // Mouse influence
+          float dist = length(uv - uMouse);
+          float mouseInfluence = smoothstep(0.0, 0.6, 1.0 - dist * 1.6);
+          
+          // Multi-octave noise
+          float disp = texture2D(uNoise, uv * 2.0 + uTime * 0.05).r;
+          disp += texture2D(uNoise, uv * 4.0 - uTime * 0.03).r * 0.5;
+          disp += texture2D(uNoise, uv * 8.0 + uTime * 0.01).r * 0.25;
+          
+          float distortAmount = mix(0.0, 0.12, uProgress) * (1.0 + mouseInfluence * 0.8);
+          vec2 distortDir = normalize(uv - vec2(0.5));
+          uv += distortDir * (disp - 0.5) * distortAmount;
+          
+          // Color based on progress
+          vec3 color = mix(
+            vec3(0.09, 0.09, 0.11),  // surface
+            vec3(0.2, 0.18, 0.05),   // gold tint
+            uProgress * 0.3
+          );
+          
+          // Edge glow
+          float vignette = 1.0 - length(uv - 0.5) * 0.8;
+          color += vec3(0.91, 0.71, 0.0) * (1.0 - vignette) * uProgress * 0.15;
+          
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+      uniforms: {
+        uNoise: { value: noiseTexture },
+        uTime: { value: 0 },
+        uProgress: { value: 0 },
+        uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+      },
+    });
+
+    const plane = new THREE.Mesh(geometry, material);
+    scene.add(plane);
+
+    let animationId: number;
+    let time = 0;
+    let targetProgress = 0;
+    let currentProgress = 0;
+
+    function resize() {
+      const rect = media.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+      renderer.setSize(rect.width, rect.height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    }
+
+    function animate() {
+      time += 0.016;
+      
+      // Smooth progress interpolation
+      currentProgress += (targetProgress - currentProgress) * 0.1;
+      
+      material.uniforms.uTime.value = time;
+      material.uniforms.uProgress.value = currentProgress;
+      
+      renderer.render(scene, camera);
+      animationId = requestAnimationFrame(animate);
+    }
+
+    // Mouse tracking
+    function onMouseMove(e: MouseEvent) {
+      const rect = media.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = 1 - (e.clientY - rect.top) / rect.height;
+      material.uniforms.uMouse.value.set(x, y);
+    }
+
+    // Hover handlers
+    media.addEventListener('mouseenter', () => {
+      targetProgress = 1;
+      gsap.to(overlay, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
+    });
+
+    media.addEventListener('mouseleave', () => {
+      targetProgress = 0;
+      gsap.to(overlay, { opacity: 0, y: 20, duration: 0.4, ease: 'power2.out' });
+    });
+
+    media.addEventListener('mousemove', onMouseMove);
+
+    resize();
+    animate();
+    window.addEventListener('resize', resize);
+
+    // Cleanup
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.removedNodes) {
+          if (node === card || node.contains(card)) {
+            cancelAnimationFrame(animationId);
+            window.removeEventListener('resize', resize);
+            media.removeEventListener('mouseenter', () => {});
+            media.removeEventListener('mouseleave', () => {});
+            media.removeEventListener('mousemove', onMouseMove);
+            renderer.dispose();
+            geometry.dispose();
+            material.dispose();
+            noiseTexture.dispose();
+            observer.disconnect();
+            return;
+          }
+        }
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+})();
+</script>
+
+<style>
+  .selected-work {
+    padding: 120px 0;
+    background: var(--bg);
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+
+  .case-studies-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+
+  .case-study-card {
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .card-media {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .displacement-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    background: linear-gradient(180deg, transparent 0%, rgba(10, 10, 11, 0.95) 100%);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .case-study-card:hover .card-overlay {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .card-category {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .card-description {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    max-width: 400px;
+  }
+
+  .card-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-bottom: 16px;
+  }
+
+  .metric {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .metric-value {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .metric-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+
+  .card-tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .tech-tag {
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    transition: all 0.2s ease;
+  }
+
+  .tech-tag:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gold);
+    transition: gap 0.2s ease;
+  }
+
+  .card-link svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--gold);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+
+  .card-link:hover {
+    gap: 14px;
+  }
+
+  .card-link:hover svg {
+    transform: translateX(4px);
+  }
+
+  @media (max-width: 1024px) {
+    .case-studies-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .card-title {
+      font-size: 1.5rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .selected-work {
+      padding: 80px 0;
+    }
+    
+    .card-overlay {
+      opacity: 1;
+      transform: none;
+      background: linear-gradient(180deg, transparent 0%, rgba(10, 10, 11, 0.95) 60%);
+    }
+    
+    .card-metrics {
+      gap: 16px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card-overlay {
+      opacity: 1;
+      transform: none;
+      background: linear-gradient(180deg, transparent 0%, rgba(10, 10, 11, 0.95) 60%);
+    }
+    
+    .displacement-canvas {
+      display: none;
+    }
+  }
+</style>

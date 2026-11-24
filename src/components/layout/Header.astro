@@ -1,0 +1,140 @@
+---
+// Header component - Minimal navigation with logo and CTA
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+---
+
+<header class={`site-header ${className}`} role="banner">
+  <div class="container header-inner">
+    <a href="/" class="logo" aria-label="Home">
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" class="logo-mark">
+        <rect x="2" y="2" width="28" height="28" rx="6" stroke="currentColor" stroke-width="2"/>
+        <path d="M10 16h12M10 16l4-4M10 16l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span class="logo-text">Portfolio</span>
+    </a>
+    
+    <nav class="header-nav" aria-label="Main navigation">
+      <a href="#what-i-build" class="nav-link">What I Build</a>
+      <a href="#how-i-work" class="nav-link">How I Work</a>
+      <a href="#selected-work" class="nav-link">Selected Work</a>
+    </nav>
+    
+    <div class="header-actions">
+      <a href="#contact" class="btn btn-primary header-cta">Start a Project</a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(10, 10, 11, 0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+    transition: all 0.3s ease;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 1.125rem;
+    font-family: var(--font-display);
+  }
+
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    stroke: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    display: none;
+  }
+
+  @media (min-width: 640px) {
+    .logo-text {
+      display: inline;
+    }
+  }
+
+  .header-nav {
+    display: none;
+    gap: 40px;
+  }
+
+  @media (min-width: 768px) {
+    .header-nav {
+      display: flex;
+    }
+  }
+
+  .nav-link {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--muted);
+    transition: color 0.2s ease;
+    position: relative;
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--gold);
+    transition: width 0.3s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--text);
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  .header-actions {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .header-actions {
+      display: flex;
+    }
+  }
+
+  .header-cta {
+    padding: 10px 20px;
+    font-size: 0.875rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-header {
+      backdrop-filter: none;
+      background: var(--bg);
+    }
+  }
+</style>

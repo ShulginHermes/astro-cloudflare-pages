@@ -1,0 +1,188 @@
+---
+// Footer component - Minimal footer with links and copyright
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+
+const currentYear = new Date().getFullYear();
+
+const footerLinks = {
+  work: [
+    { label: 'VentureFlow', href: '/work/ventureflow' },
+    { label: 'NeuralOps', href: '/work/neuralops' },
+    { label: 'AutoSync', href: '/work/autosync' },
+    { label: 'GrowthMatrix', href: '/work/growthmatrix' },
+  ],
+  connect: [
+    { label: 'GitHub', href: 'https://github.com', external: true },
+    { label: 'LinkedIn', href: 'https://linkedin.com', external: true },
+    { label: 'Twitter', href: 'https://twitter.com', external: true },
+    { label: 'Email', href: 'mailto:hello@example.com', external: true },
+  ],
+  legal: [
+    { label: 'Privacy', href: '/privacy' },
+    { label: 'Terms', href: '/terms' },
+  ],
+};
+---
+
+<footer class={`site-footer ${className}`} role="contentinfo">
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="footer-logo" aria-label="Home">
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect x="2" y="2" width="28" height="28" rx="6" stroke="currentColor" stroke-width="2"/>
+          <path d="M10 16h12M10 16l4-4M10 16l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </a>
+      <p class="footer-tagline">Building digital experiences that matter.</p>
+    </div>
+    
+    <nav class="footer-nav" aria-label="Work">
+      <h4 class="footer-heading">Selected Work</h4>
+      <ul class="footer-links">
+        {footerLinks.work.map(link => (
+          <li><a href={link.href}>{link.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+    
+    <nav class="footer-nav" aria-label="Connect">
+      <h4 class="footer-heading">Connect</h4>
+      <ul class="footer-links">
+        {footerLinks.connect.map(link => (
+          <li>
+            <a href={link.href} target={link.external ? '_blank' : '_self'} rel={link.external ? 'noopener noreferrer' : undefined}>
+              {link.label}
+              {link.external && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="external-icon" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+    
+    <nav class="footer-nav" aria-label="Legal">
+      <h4 class="footer-heading">Legal</h4>
+      <ul class="footer-links">
+        {footerLinks.legal.map(link => (
+          <li><a href={link.href}>{link.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+  
+  <div class="footer-bottom">
+    <p class="copyright">&copy; {currentYear} Portfolio. All rights reserved.</p>
+    <p class="footer-note">Built with Astro, Three.js, GSAP & Lenis</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 80px 0 40px;
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    margin-bottom: 60px;
+  }
+
+  @media (min-width: 640px) {
+    .footer-grid {
+      grid-template-columns: 2fr repeat(3, 1fr);
+    }
+  }
+
+  .footer-logo {
+    display: inline-flex;
+    margin-bottom: 16px;
+    color: var(--gold);
+  }
+
+  .footer-logo svg {
+    width: 40px;
+    height: 40px;
+    stroke: var(--gold);
+  }
+
+  .footer-tagline {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 280px;
+  }
+
+  .footer-heading {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .footer-links a {
+    font-size: 0.9rem;
+    color: var(--muted);
+    transition: color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .footer-links a:hover {
+    color: var(--gold);
+  }
+
+  .external-icon {
+    width: 14px;
+    height: 14px;
+    stroke: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .footer-links a:hover .external-icon {
+    stroke: var(--gold);
+  }
+
+  .footer-bottom {
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+  }
+
+  @media (min-width: 768px) {
+    .footer-bottom {
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  }
+
+  .copyright {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .footer-note {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: var(--font-code);
+  }
+</style>

@@ -1,0 +1,35 @@
+---
+// Button component - interactive button with variants
+interface Props {
+  children: any;
+  variant?: 'primary' | 'secondary' | 'ghost';
+  href?: string;
+  type?: 'button' | 'submit' | 'reset';
+  class?: string;
+  disabled?: boolean;
+  onClick?: (e: MouseEvent) => void;
+}
+
+const { children, variant = 'primary', href, type = 'button', class: className = '', disabled = false, onClick } = Astro.props;
+const isLink = !!href;
+const Tag = isLink ? 'a' : 'button';
+
+const baseClasses = 'inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium transition-all duration-300 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:opacity-50 disabled:pointer-events-none';
+
+const variantClasses = {
+  primary: 'bg-gold text-bg hover:bg-gold-bright hover:shadow-[0_0_30px_rgba(232,180,74,0.3)] active:scale-[0.98]',
+  secondary: 'bg-surface text-text border border-border hover:border-gold hover:bg-surface/80 active:scale-[0.98]',
+  ghost: 'text-muted hover:text-gold hover:bg-surface active:scale-[0.98]',
+};
+---
+
+<Tag
+  href={href}
+  type={isLink ? undefined : type}
+  class={`${baseClasses} ${variantClasses[variant]} ${className}`}
+  disabled={disabled && !isLink}
+  on:click={onClick}
+  aria-disabled={disabled}
+>
+  {children}
+</Tag>

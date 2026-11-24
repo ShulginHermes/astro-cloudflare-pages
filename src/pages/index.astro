@@ -1,16 +1,78 @@
 ---
+// Main Portfolio Page
+import Hero from '../components/sections/Hero.astro';
+import WhatIBuild from '../components/sections/WhatIBuild.astro';
+import HowIWork from '../components/sections/HowIWork.astro';
+import SelectedWork from '../components/sections/SelectedWork.astro';
+import CTA from '../components/sections/CTA.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import CursorFollower from '../components/ui/CursorFollower.astro';
+import '../styles/global.css';
 ---
 
+<!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Portfolio | Building Digital Experiences That Matter</title>
+    <meta name="description" content="Senior Full-Stack Developer specializing in web development, AI solutions, automation, and business strategy. High-performance applications with measurable impact." />
+    <meta name="theme-color" content="#0a0a0b" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Portfolio | Building Digital Experiences That Matter" />
+    <meta property="og:description" content="Senior Full-Stack Developer specializing in web development, AI solutions, automation, and business strategy." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og-image.jpg" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Portfolio | Building Digital Experiences That Matter" />
+    <meta name="twitter:description" content="Senior Full-Stack Developer specializing in web development, AI solutions, automation, and business strategy." />
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <Header />
+    
+    <main id="main-content">
+      <Hero />
+      <WhatIBuild />
+      <HowIWork />
+      <SelectedWork />
+      <CTA />
+    </main>
+    
+    <Footer />
+    <CursorFollower />
+    
+    <!-- Initialize Lenis and GSAP -->
+    <script type="module">
+      import { initLenis } from '../scripts/lenis.js';
+      import { gsap, ScrollTrigger } from '../scripts/gsap-register.js';
+      
+      // Initialize smooth scroll
+      const lenis = initLenis();
+      
+      // Refresh ScrollTrigger on Lenis scroll
+      lenis.on('scroll', ScrollTrigger.update);
+      
+      // GSAP ticker
+      gsap.ticker.add((time) => {
+        lenis.raf(time * 1000);
+      });
+      gsap.ticker.lagSmoothing(0);
+      
+      // Global ScrollTrigger refresh on load
+      window.addEventListener('load', () => {
+        ScrollTrigger.refresh();
+      });
+    </script>
+  </body>
 </html>

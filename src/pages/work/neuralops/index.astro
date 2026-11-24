@@ -1,0 +1,239 @@
+---
+// NeuralOps Case Study
+import Header from '../../../components/layout/Header.astro';
+import Footer from '../../../components/layout/Footer.astro';
+import Button from '../../../components/ui/Button.astro';
+import '../../../styles/global.css';
+
+const study = {
+  slug: 'neuralops',
+  title: 'NeuralOps',
+  category: 'AI Solutions',
+  tagline: 'MLOps platform for model lifecycle management. Automated training, deployment, and monitoring pipelines.',
+  heroImage: '/images/neuralops-hero.jpg',
+  problem: 'ML teams spend 80% of their time on infrastructure instead of modeling. Manual deployment, lack of reproducibility, and no centralized monitoring lead to model drift and failed productions.',
+  solution: 'Designed an end-to-end MLOps platform with automated training pipelines, versioned model registry, canary deployments, and real-time drift detection. Built with Python, Kubernetes, MLflow, and custom monitoring stack.',
+  results: [
+    { metric: '500+', label: 'Models Deployed' },
+    { metric: '<50ms', label: 'Inference Latency' },
+    { metric: '94.2%', label: 'Model Accuracy' },
+    { metric: '90%', label: 'Time Saved' },
+  ],
+  techStack: ['Python', 'Kubernetes', 'MLflow', 'Redis', 'Prometheus', 'Grafana', 'FastAPI', 'PostgreSQL'],
+  timeline: '8 months',
+  team: '5 engineers',
+  role: 'ML Platform Lead',
+  gallery: [
+    '/images/neuralops-1.jpg',
+    '/images/neuralops-2.jpg',
+    '/images/neuralops-3.jpg',
+  ],
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{study.title} — Case Study | Portfolio</title>
+    <meta name="description" content={study.tagline} />
+    <meta name="theme-color" content="#0a0a0b" />
+    <meta property="og:title" content="{study.title} — Case Study" />
+    <meta property="og:description" content={study.tagline} />
+    <meta property="og:type" content="article" />
+    <meta property="og:image" content={study.heroImage} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <Header />
+    <main id="main-content">
+      <section class="case-hero" aria-labelledby="case-title">
+        <div class="case-hero-background" aria-hidden="true">
+          <div class="case-hero-grid"></div>
+        </div>
+        <div class="container case-hero-content">
+          <nav class="case-breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+            <a href="/#selected-work">Selected Work</a>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+            <span aria-current="page">{study.title}</span>
+          </nav>
+          <header class="case-hero-header">
+            <span class="case-category">{study.category}</span>
+            <h1 id="case-title" class="case-title" data-split-text>{study.title}</h1>
+            <p class="case-tagline" data-fade-up>{study.tagline}</p>
+          </header>
+          <div class="case-meta" data-fade-up data-delay="200">
+            <div class="meta-item"><span class="meta-label">Timeline</span><span class="meta-value">{study.timeline}</span></div>
+            <div class="meta-item"><span class="meta-label">Team</span><span class="meta-value">{study.team}</span></div>
+            <div class="meta-item"><span class="meta-label">Role</span><span class="meta-value">{study.role}</span></div>
+          </div>
+        </div>
+        <div class="case-scroll-indicator" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></div>
+      </section>
+      <section class="case-metrics" aria-labelledby="metrics-title">
+        <div class="container">
+          <h2 id="metrics-title" class="visually-hidden">Key Metrics</h2>
+          <div class="metrics-grid">
+            {study.results.map(result => (
+              <div class="metric-card" data-metric>
+                <span class="metric-value" data-count={result.metric.replace(/[^0-9.]/g, '')}>{result.metric.includes('$') ? '$0' : '0'}</span>
+                <span class="metric-suffix">{result.metric.replace(/[0-9.$%]/g, '')}</span>
+                <span class="metric-label">{result.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section class="case-narrative" aria-labelledby="problem-title">
+        <div class="container">
+          <div class="narrative-grid">
+            <article class="narrative-card" data-narrative>
+              <div class="narrative-number">01</div>
+              <h2 id="problem-title" class="narrative-title">The Problem</h2>
+              <p class="narrative-text">{study.problem}</p>
+            </article>
+            <article class="narrative-card" data-narrative>
+              <div class="narrative-number">02</div>
+              <h2 class="narrative-title">The Solution</h2>
+              <p class="narrative-text">{study.solution}</p>
+            </article>
+          </div>
+        </div>
+      </section>
+      <section class="case-tech" aria-labelledby="tech-title">
+        <div class="container">
+          <h2 id="tech-title" class="section-title" data-split-text>Tech Stack</h2>
+          <div class="tech-tags">
+            {study.techStack.map(tech => <span class="tech-tag">{tech}</span>)}
+          </div>
+        </div>
+      </section>
+      <section class="case-gallery" aria-labelledby="gallery-title">
+        <div class="container">
+          <h2 id="gallery-title" class="section-title" data-split-text>Implementation</h2>
+          <div class="gallery-grid">
+            {study.gallery.map((img, i) => (
+              <div class="gallery-item" data-gallery>
+                <div class="gallery-placeholder" style="background: linear-gradient(135deg, var(--surface) 0%, var(--border) 100%);">
+                  <span class="placeholder-text">Screenshot {i + 1}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section class="case-cta" aria-labelledby="cta-title">
+        <div class="container">
+          <div class="cta-card">
+            <h2 id="cta-title" class="cta-title" data-split-text>Have a Similar Challenge?</h2>
+            <p class="cta-text">Let's discuss how we can apply these learnings to your project.</p>
+            <Button variant="primary" href="/#contact" class="cta-btn">Start a Conversation</Button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <Footer />
+    <script type="module">
+          import { gsap, ScrollTrigger } from '../../../scripts/gsap-register.js';
+          import { initLenis } from '../../../scripts/lenis.js';
+          import { prefersReducedMotion } from '../../../utils/scroll.js';
+          import { SplitText } from 'gsap/SplitText';
+      gsap.registerPlugin(SplitText);
+      const prefersReduced = prefersReducedMotion();
+      const lenis = initLenis();
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add((time) => lenis.raf(time * 1000));
+      gsap.ticker.lagSmoothing(0);
+      document.querySelectorAll('[data-split-text]').forEach(el => {
+        if (!prefersReduced) {
+          const split = new SplitText(el, { type: 'words,chars' });
+          gsap.from(split.chars, { opacity: 0, y: 30, duration: 0.6, stagger: 0.02, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 85%' } });
+        }
+      });
+      document.querySelectorAll('[data-fade-up]').forEach(el => {
+        const delay = parseInt(el.dataset.delay || '0') / 1000;
+        if (!prefersReduced) {
+          gsap.from(el, { opacity: 0, y: 30, duration: 0.8, delay: 0.3 + delay, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 85%' } });
+        }
+      });
+      document.querySelectorAll('[data-count]').forEach(el => {
+        const target = parseFloat(el.dataset.count || '0');
+        const suffix = el.nextElementSibling?.classList.contains('metric-suffix') ? el.nextElementSibling.textContent : '';
+        if (!prefersReduced) {
+          gsap.to(el, { innerText: target, duration: 2, ease: 'power2.out', snap: { innerText: 0.1 }, scrollTrigger: { trigger: el, start: 'top 80%' }, onUpdate: function() { el.innerText = this.targets()[0].innerText.toFixed(1).replace(/\.0$/, '') + suffix; } });
+        } else { el.innerText = target.toString(); }
+      });
+      document.querySelectorAll('[data-narrative]').forEach((el, i) => {
+        if (!prefersReduced) { gsap.from(el, { opacity: 0, x: i % 2 === 0 ? -40 : 40, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 80%' } }); }
+      });
+      document.querySelectorAll('[data-gallery]').forEach((el, i) => {
+        if (!prefersReduced) { gsap.from(el, { opacity: 0, y: 40, duration: 0.6, delay: i * 0.1, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 85%' } }); }
+      });
+      document.querySelectorAll('[data-metric]').forEach((el, i) => {
+        if (!prefersReduced) { gsap.from(el, { opacity: 0, y: 30, duration: 0.6, delay: i * 0.08, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 85%' } }); }
+      });
+      window.addEventListener('load', () => ScrollTrigger.refresh());
+    </script>
+  </body>
+</html>
+
+<style>
+  .case-hero { position: relative; min-height: 90vh; display: flex; flex-direction: column; justify-content: center; padding: 160px 0 80px; overflow: hidden; }
+  .case-hero-background { position: absolute; inset: 0; z-index: 0; }
+  .case-hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(232, 180, 74, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(232, 180, 74, 0.02) 1px, transparent 1px); background-size: 80px 80px; }
+  .case-hero-content { position: relative; z-index: 1; max-width: 800px; }
+  .case-breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted); margin-bottom: 32px; flex-wrap: wrap; }
+  .case-breadcrumb a { color: var(--muted); transition: color 0.2s; }
+  .case-breadcrumb a:hover { color: var(--gold); }
+  .case-breadcrumb svg { width: 16px; height: 16px; stroke: var(--border); }
+  .case-breadcrumb span[aria-current="page"] { color: var(--text); }
+  .case-hero-header { margin-bottom: 32px; }
+  .case-category { display: inline-block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 16px; }
+  .case-title { font-family: var(--font-display); font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 500; line-height: 1.1; letter-spacing: -0.02em; color: var(--text); }
+  .case-tagline { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--muted); line-height: 1.7; margin-top: 20px; max-width: 600px; }
+  .case-meta { display: flex; flex-wrap: wrap; gap: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .meta-item { display: flex; flex-direction: column; gap: 4px; }
+  .meta-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .meta-value { font-family: var(--font-display); font-size: 1.25rem; font-weight: 500; color: var(--text); }
+  .case-scroll-indicator { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); color: var(--muted); animation: bounce 2s ease-in-out infinite; }
+  @keyframes bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(10px); } }
+  .case-metrics { padding: 60px 0; background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  @media (min-width: 768px) { .metrics-grid { grid-template-columns: repeat(4, 1fr); } }
+  .metric-card { text-align: center; padding: 24px; }
+  .metric-value { font-family: var(--font-display); font-size: clamp(2.5rem, 5vw, 3.5rem); font-weight: 500; color: var(--text); line-height: 1; }
+  .metric-suffix { font-family: var(--font-display); color: var(--gold); }
+  .metric-label { display: block; margin-top: 8px; font-size: 0.875rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .case-narrative { padding: 100px 0; }
+  .narrative-grid { display: grid; grid-template-columns: 1fr; gap: 40px; }
+  @media (min-width: 768px) { .narrative-grid { grid-template-columns: 1fr 1fr; } }
+  .narrative-card { padding: 40px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; position: relative; }
+  .narrative-number { font-family: var(--font-code); font-size: 0.75rem; font-weight: 600; color: var(--gold); letter-spacing: 0.1em; margin-bottom: 16px; }
+  .narrative-title { font-family: var(--font-display); font-size: 1.75rem; font-weight: 500; color: var(--text); margin-bottom: 16px; }
+  .narrative-text { color: var(--muted); line-height: 1.8; font-size: 1rem; }
+  .case-tech { padding: 100px 0; background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .tech-tags { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+  .tech-tag { font-size: 0.8rem; font-weight: 500; padding: 8px 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); transition: all 0.2s; }
+  .tech-tag:hover { border-color: var(--gold); box-shadow: 0 0 20px rgba(232, 180, 74, 0.15); }
+  .case-gallery { padding: 100px 0; }
+  .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 24px; margin-top: 32px; }
+  @media (min-width: 768px) { .gallery-grid { grid-template-columns: repeat(3, 1fr); } }
+  .gallery-item { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+  .gallery-placeholder { aspect-ratio: 16 / 10; display: flex; align-items: center; justify-content: center; }
+  .placeholder-text { color: var(--muted); font-size: 0.875rem; }
+  .case-cta { padding: 100px 0; }
+  .cta-card { max-width: 600px; margin: 0 auto; padding: 60px 40px; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; position: relative; overflow: hidden; }
+  .cta-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 20% 20%, rgba(232, 180, 74, 0.05) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(253, 224, 71, 0.05) 0%, transparent 50%); }
+  .cta-title { font-family: var(--font-display); font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 500; color: var(--text); margin-bottom: 16px; position: relative; z-index: 1; }
+  .cta-text { color: var(--muted); font-size: 1.1rem; margin-bottom: 32px; position: relative; z-index: 1; }
+  .cta-btn { position: relative; z-index: 1; padding: 16px 40px; font-size: 1rem; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  @media (prefers-reduced-motion: reduce) { .case-scroll-indicator { animation: none; } }
+</style>

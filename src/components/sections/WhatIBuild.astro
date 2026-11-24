@@ -1,0 +1,334 @@
+---
+// WhatIBuild section - Horizontal scroll with 3D category cards
+// client:visible for GSAP ScrollTrigger
+import CategoryCard3D from '../../components/3d/CategoryCard3D.astro';
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+
+const categories = [
+  {
+    title: 'Web Development',
+    description: 'High-performance web applications with modern frameworks. React, Astro, TypeScript, and edge-ready architectures.',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 15h6M9 12h4"/></svg>`,
+    demoType: 'particles' as const,
+    slug: 'ventureflow',
+    accentColor: '#e8b44a',
+  },
+  {
+    title: 'AI Solutions',
+    description: 'MLOps platforms, LLM integrations, and intelligent agents. Production-ready ML pipelines and vector search.',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/><path d="M8 14h8M8 18h8"/></svg>`,
+    demoType: 'network' as const,
+    slug: 'neuralops',
+    accentColor: '#fde047',
+  },
+  {
+    title: 'Automation',
+    description: 'Workflow automation, ETL pipelines, and system integrations. Eliminate manual processes with robust orchestration.',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="8" height="8" rx="2"/><rect x="14" y="2" width="8" height="8" rx="2"/><rect x="2" y="14" width="8" height="8" rx="2"/><rect x="14" y="14" width="8" height="8" rx="2"/><path d="M10 6v2M10 16v2M6 10h2M16 10h2"/></svg>`,
+    demoType: 'grid' as const,
+    slug: 'autosync',
+    accentColor: '#e8b44a',
+  },
+  {
+    title: 'Business Solutions',
+    description: 'Growth strategy, digital transformation, and product development. End-to-end partnership for scalable outcomes.',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/><path d="M2 16h20"/></svg>`,
+    demoType: 'wave' as const,
+    slug: 'growthmatrix',
+    accentColor: '#fde047',
+  },
+];
+---
+
+<section class={`what-i-build ${className}`} id="what-i-build" aria-labelledby="what-i-build-title">
+  <div class="container">
+    <header class="section-header">
+      <h2 id="what-i-build-title" class="section-title" data-split-text>What I Build</h2>
+      <p class="section-subtitle">Four categories. Deep expertise. End-to-end delivery.</p>
+    </header>
+    
+    <div class="horizontal-scroll" data-horizontal-scroll>
+      <div class="scroll-wrapper" data-scroll-wrapper>
+        <div class="cards-track">
+          {categories.map((cat, i) => (
+            <article class="category-card-wrapper" data-index={i}>
+              <CategoryCard3D
+                title={cat.title}
+                description={cat.description}
+                icon={cat.icon}
+                demoType={cat.demoType}
+                accentColor={cat.accentColor}
+                class="category-card"
+              />
+              <a href={`/work/${cat.slug}`} class="card-link" aria-label={`View ${cat.title} case study`}>
+                <span class="link-text">Explore Project</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="link-arrow">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap, ScrollTrigger } from '../../scripts/gsap-register';
+  import { prefersReducedMotion } from '../../utils/scroll';
+  import { SplitText } from 'gsap/SplitText';
+
+  gsap.registerPlugin(SplitText);
+
+  (() => {
+    const section = document.currentScript?.parentElement?.closest('.what-i-build') as HTMLElement;
+    if (!section) return;
+
+    const prefersReduced = prefersReducedMotion();
+
+  // SplitText for section title
+  const titleElement = section.querySelector('[data-split-text]') as HTMLElement;
+  if (titleElement && !prefersReduced) {
+    const split = new SplitText(titleElement, { type: 'words,chars' });
+    gsap.from(split.chars, {
+      opacity: 0,
+      y: 30,
+      duration: 0.8,
+      stagger: 0.03,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: titleElement,
+        start: 'top 80%',
+      },
+    });
+  }
+
+  // Horizontal scroll with GSAP ScrollTrigger
+  const wrapper = section.querySelector('[data-scroll-wrapper]') as HTMLElement;
+  const cards = section.querySelectorAll('.category-card-wrapper');
+  
+  if (wrapper && cards.length > 0 && !prefersReduced) {
+    const totalWidth = Array.from(cards).reduce((sum, card) => sum + (card as HTMLElement).offsetWidth, 0);
+    const scrollDistance = totalWidth - wrapper.offsetWidth;
+
+    gsap.to(cards, {
+      x: () => -scrollDistance,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: section.querySelector('[data-horizontal-scroll]'),
+        start: 'top top',
+        end: () => `+=${scrollDistance}`,
+        pin: true,
+        scrub: 1,
+        anticipatePin: 1,
+      },
+    });
+
+    // Card entrance animations
+    cards.forEach((card, i) => {
+      gsap.from(card, {
+        opacity: 0,
+        y: 50,
+        duration: 0.8,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: card,
+          start: 'left 85%',
+          end: 'left 15%',
+          scrub: 0.5,
+        },
+      });
+    });
+  } else {
+    // Fallback for reduced motion - show all cards in a grid
+    cards.forEach(card => {
+      (card as HTMLElement).style.opacity = '1';
+      (card as HTMLElement).style.transform = 'none';
+    });
+    if (wrapper) {
+      wrapper.style.display = 'grid';
+      wrapper.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))';
+      wrapper.style.gap = '24px';
+    }
+  }
+
+  // Hover effects on card links
+  const cardLinks = section.querySelectorAll('.card-link');
+  cardLinks.forEach(link => {
+    const arrow = link.querySelector('.link-arrow') as HTMLElement;
+    link.addEventListener('mouseenter', () => {
+      if (!prefersReduced && arrow) {
+        gsap.to(arrow, { x: 8, duration: 0.3, ease: 'power2.out' });
+      }
+    });
+    link.addEventListener('mouseleave', () => {
+      if (!prefersReduced && arrow) {
+        gsap.to(arrow, { x: 0, duration: 0.3, ease: 'power2.out' });
+      }
+    });
+  });
+})
+();
+</script>
+
+<style>
+  .what-i-build {
+    padding: 120px 0;
+    background: var(--bg);
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+
+  .horizontal-scroll {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scroll-wrapper {
+    display: flex;
+    gap: 32px;
+    padding: 20px 0 40px;
+    will-change: transform;
+  }
+
+  .cards-track {
+    display: flex;
+    gap: 32px;
+    width: max-content;
+  }
+
+  .category-card-wrapper {
+    position: relative;
+    flex-shrink: 0;
+    width: 380px;
+  }
+
+  .category-card {
+    height: 100%;
+    min-height: 400px;
+  }
+
+  .card-link {
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+    z-index: 10;
+  }
+
+  .category-card-wrapper:hover .card-link,
+  .category-card-wrapper:focus-within .card-link {
+    opacity: 1;
+    bottom: -60px;
+    pointer-events: auto;
+    border-color: var(--gold);
+  }
+
+  .link-arrow {
+    width: 18px;
+    height: 18px;
+    stroke: var(--gold);
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+  }
+
+  @media (max-width: 1024px) {
+    .category-card-wrapper {
+      width: 340px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .what-i-build {
+      padding: 80px 0;
+    }
+    
+    .horizontal-scroll {
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 20px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    
+    .scroll-wrapper {
+      display: flex;
+      gap: 20px;
+      padding: 10px 0 30px;
+    }
+    
+    .category-card-wrapper {
+      width: 280px;
+    }
+    
+    .card-link {
+      position: relative;
+      bottom: auto;
+      left: auto;
+      transform: none;
+      opacity: 1;
+      pointer-events: auto;
+      margin-top: 16px;
+      align-self: center;
+    }
+    
+    .category-card-wrapper:hover .card-link {
+      bottom: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .horizontal-scroll {
+      overflow-x: auto;
+    }
+    
+    .scroll-wrapper {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      padding: 0;
+    }
+    
+    .cards-track {
+      display: contents;
+    }
+    
+    .category-card-wrapper {
+      width: 100%;
+    }
+    
+    .card-link {
+      position: relative;
+      bottom: auto;
+      left: auto;
+      transform: none;
+      opacity: 1;
+      pointer-events: auto;
+      margin-top: 16px;
+      align-self: center;
+    }
+  }
+</style>

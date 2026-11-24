@@ -1,0 +1,154 @@
+---
+// CursorFollower component - custom cursor with dot and ring follower
+// Only active on desktop (non-touch devices)
+---
+
+<div id="cursor-follower" class="fixed inset-0 pointer-events-none z-[9999] hidden lg:block" aria-hidden="true">
+  <div id="cursor-dot" class="cursor-dot"></div>
+  <div id="cursor-ring" class="cursor-ring"></div>
+</div>
+
+<script>
+  // Only initialize on desktop, non-touch devices
+  const isTouch = window.matchMedia('(pointer: coarse)').matches;
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  
+  if (isTouch || prefersReducedMotion) {
+    // Clean up element if not needed
+    const el = document.getElementById('cursor-follower');
+    if (el) el.remove();
+  } else {
+    initCursorFollower();
+  }
+
+  function initCursorFollower() {
+    const dot = document.getElementById('cursor-dot') as HTMLElement;
+    const ring = document.getElementById('cursor-ring') as HTMLElement;
+    const follower = document.getElementById('cursor-follower') as HTMLElement;
+    
+    if (!dot || !ring || !follower) return;
+
+    // Styles are in CSS, but we can set initial transforms here
+    let mouseX = 0;
+    let mouseY = 0;
+    let dotX = 0;
+    let dotY = 0;
+    let ringX = 0;
+    let ringY = 0;
+
+    // Target positions for interactive elements
+    let targetScale = 1;
+    let targetRingScale = 1;
+    let targetBorderColor = 'rgba(232, 180, 74, 0.5)';
+    let targetBgColor = 'rgba(232, 180, 74, 1)';
+
+    // Interactive element selectors
+    const interactiveSelectors = 'a, button, [role="button"], input, textarea, select, .card, [data-cursor-interactive]';
+
+    function updateCursor(e: MouseEvent) {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    }
+
+    function animate() {
+      // Smooth follow for dot (fast)
+      dotX += (mouseX - dotX) * 0.3;
+      dotY += (mouseY - dotY) * 0.3;
+      
+      // Smooth follow for ring (slower, springy)
+      ringX += (mouseX - ringX) * 0.15;
+      ringY += (mouseY - ringY) * 0.15;
+
+      dot.style.transform = `translate(${dotX}px, ${dotY}px) translate(-50%, -50%) scale(${targetScale})`;
+      ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%) scale(${targetRingScale})`;
+
+      requestAnimationFrame(animate);
+    }
+
+    // Check for hover on interactive elements
+    function checkInteractive(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      const interactive = target.closest(interactiveSelectors);
+      
+      if (interactive) {
+        targetScale = 1.5;
+        targetRingScale = 2;
+        targetBorderColor = 'rgba(232, 180, 74, 1)';
+        targetBgColor = 'rgba(232, 180, 74, 1)';
+        ring.style.borderColor = targetBorderColor;
+        ring.style.boxShadow = '0 0 20px rgba(232, 180, 74, 0.4)';
+        dot.style.backgroundColor = targetBgColor;
+        
+        // Special handling for cards
+        if (interactive.classList.contains('card')) {
+          targetRingScale = 3;
+        }
+      } else {
+        targetScale = 1;
+        targetRingScale = 1;
+        targetBorderColor = 'rgba(232, 180, 74, 0.3)';
+        targetBgColor = 'rgba(232, 180, 74, 1)';
+        ring.style.borderColor = targetBorderColor;
+        ring.style.boxShadow = 'none';
+        dot.style.backgroundColor = targetBgColor;
+      }
+    }
+
+    document.addEventListener('mousemove', updateCursor);
+    document.addEventListener('mousemove', checkInteractive);
+    
+    // Handle mouse leave/enter window
+    document.addEventListener('mouseleave', () => {
+      follower.style.opacity = '0';
+    });
+    document.addEventListener('mouseenter', () => {
+      follower.style.opacity = '1';
+    });
+
+    // Start animation
+    animate();
+  }
+</script>
+
+<style>
+  #cursor-follower {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9999;
+    contain: layout style;
+  }
+
+  .cursor-dot {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--gold);
+    transform: translate(-50%, -50%) scale(1);
+    will-change: transform;
+    transition: background-color 0.2s ease, width 0.2s ease, height 0.2s ease;
+    z-index: 10000;
+  }
+
+  .cursor-ring {
+    position: fixed;
+    width: 40px;
+    height: 40px;
+    border: 2px solid rgba(232, 180, 74, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    will-change: transform, border-color, box-shadow;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, width 0.3s ease, height 0.3s ease;
+    z-index: 9999;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #cursor-follower {
+      display: none !important;
+    }
+  }
+</style>
